@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { initializeApp } from "firebase/app";
 import {
     getAuth,
@@ -13,25 +13,14 @@ import {
     onSnapshot
 } from "firebase/firestore";
 
-// Aggiungi in alto nel componente
-const [allBases, setAllBases] = useState([]);
-
-// Listener in tempo reale
-useEffect(() => {
-    const unsub = onSnapshot(collection(db, "bases"), (snapshot) => {
-        const data = snapshot.docs.map((doc) => doc.data());
-        setAllBases(data);
-    });
-    return () => unsub(); // pulizia
-}, []);
-
 const firebaseConfig = {
     apiKey: "AIzaSyAQ4udTL0Y7BYyowcGrHTR9EjDYVFrA1-s",
-    authDomain: "YOUR_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_BUCKET",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    authDomain: "millionspace-17829.firebaseapp.com",
+    projectId: "millionspace-17829",
+    storageBucket: "millionspace-17829.firebasestorage.app",
+    messagingSenderId: "339756686266",
+    appId: "1:339756686266:web:eb4ddcf3e74d21ba231b83",
+    measurementId: "G-FJ88ZRBR3M"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -41,10 +30,22 @@ const db = getFirestore(app);
 export default function App() {
     const [user, setUser] = useState(null);
     const [selectedCell, setSelectedCell] = useState(null);
+    const [allBases, setAllBases] = useState([]); // ✅ correttamente DENTRO App()
 
-    onAuthStateChanged(auth, (u) => {
-        if (u) setUser(u);
-    });
+    useEffect(() => {
+        const unsub = onSnapshot(collection(db, "bases"), (snapshot) => {
+            const data = snapshot.docs.map((doc) => doc.data());
+            setAllBases(data);
+        });
+        return () => unsub();
+    }, []);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (u) => {
+            if (u) setUser(u);
+        });
+        return () => unsubscribe();
+    }, []);
 
     const handleLogin = async () => {
         await signInAnonymously(auth);
@@ -84,7 +85,7 @@ export default function App() {
                                     key={i}
                                     onClick={() => handleSelect(x, y)}
                                     className={`w-16 h-16 border cursor-pointer flex items-center justify-center text-xs
-                            ${base
+                                        ${base
                                             ? isMine
                                                 ? "bg-green-500"
                                                 : "bg-red-600"
